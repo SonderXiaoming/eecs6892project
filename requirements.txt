@@ -1,0 +1,9 @@
+gymnasium
+minigrid
+stable-baselines3
+numpy
+pandas
+matplotlib
+tqdm
+tensorboard
+rich
