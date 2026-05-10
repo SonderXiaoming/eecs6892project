@@ -65,7 +65,7 @@ def evaluate_model(env_name: str, trained_strategy: str, seed: int, episodes: in
             if done:
                 time_limit_truncated = bool(info.get("TimeLimit.truncated", False))
 
-                if r > 0 and not time_limit_truncated:
+                if raw_reward > 0 and not time_limit_truncated:
                     success = 1
                 elif time_limit_truncated:
                     timeout = 1
