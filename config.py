@@ -2,7 +2,7 @@
 
 ENV_CONFIGS = {
     "FourRooms": "MiniGrid-FourRooms-v0",
-    "DoorKey": "MiniGrid-DoorKey-8x8-v0",
+    "DoorKey": "MiniGrid-DoorKey-5x5-v0",
     "MultiRoom": "MiniGrid-MultiRoom-N4-S5-v0",
 }
 

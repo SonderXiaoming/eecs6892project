@@ -37,6 +37,9 @@ def evaluate_model(env_name: str, trained_strategy: str, seed: int, episodes: in
     returns = []
     lengths = []
     successes = []
+    timeouts = []
+    success_lengths = []
+    failure_lengths = []
 
     for ep in range(episodes):
         obs = env.reset()
@@ -45,6 +48,7 @@ def evaluate_model(env_name: str, trained_strategy: str, seed: int, episodes: in
         ep_return = 0.0
         ep_len = 0
         success = 0
+        timeout = 0
 
         while not done:
             action, _ = model.predict(obs, deterministic=True)
@@ -52,18 +56,30 @@ def evaluate_model(env_name: str, trained_strategy: str, seed: int, episodes: in
 
             done = bool(dones[0])
             raw_reward = float(reward[0])
+            info = infos[0]
 
             ep_return += raw_reward
             ep_len += 1
 
-            # In raw MiniGrid evaluation, positive terminal reward means success.
-            if done and raw_reward > 0:
-                success = 1
+            # In VecEnv, terminal_observation and TimeLimit.truncated may appear in info.
+            if done:
+                time_limit_truncated = bool(info.get("TimeLimit.truncated", False))
+
+                if r > 0 and not time_limit_truncated:
+                    success = 1
+                elif time_limit_truncated:
+                    timeout = 1
+
 
         returns.append(ep_return)
         lengths.append(ep_len)
         successes.append(success)
-
+        timeouts.append(timeout)
+        
+        if success:
+            success_lengths.append(ep_len)
+        else:
+            failure_lengths.append(ep_len)
     env.close()
 
     return {
@@ -73,7 +89,10 @@ def evaluate_model(env_name: str, trained_strategy: str, seed: int, episodes: in
         "avg_return": float(np.mean(returns)),
         "std_return": float(np.std(returns)),
         "success_rate": float(np.mean(successes)),
+        "timeout_rate": float(np.mean(timeouts)),
         "avg_episode_length": float(np.mean(lengths)),
+        "avg_success_length": float(np.mean(success_lengths)) if len(success_lengths) > 0 else float(np.nan),
+        "avg_failure_length": float(np.mean(failure_lengths)) if len(failure_lengths) > 0 else float(np.nan),
         "std_episode_length": float(np.std(lengths)),
         "eval_reward_type": "raw_env_reward",
     }
