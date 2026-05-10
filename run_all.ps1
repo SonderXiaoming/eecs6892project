@@ -11,11 +11,11 @@
 #   powershell -ExecutionPolicy Bypass -File .\run_all.ps1 -UseUv -Device cuda -SkipHeatmap
 
 # Envs = "FourRooms", "DoorKey", "MultiRoom"
-# "baseline", "action_bonus", "state_bonus", "reward_shaping", "high_entropy"
+# "baseline", "action_bonus", "state_bonus", "reward_shaping", "potential_shaping", "high_entropy"
 
 param(
-    [string[]]$Envs = @("DoorKey"),
-    [string[]]$Strategies = @("baseline"),
+    [string[]]$Envs = @("FourRooms"),
+    [string[]]$Strategies = @("action_bonus", "state_bonus", "potential_shaping"),
     [int[]]$Seeds = @(42),
     [int]$Timesteps = 512000,
     [int]$Episodes = 100,

@@ -2,10 +2,16 @@
 
 import gymnasium as gym
 from gymnasium.wrappers import FlattenObservation
-from minigrid.wrappers import ImgObsWrapper, ActionBonus
+from minigrid.wrappers import ImgObsWrapper
 from stable_baselines3.common.monitor import Monitor
 
-from wrappers import StateVisitBonusWrapper, RewardShapingWrapper, HeatmapWrapper
+from wrappers import (
+    ScaledActionBonusWrapper,
+    StateVisitBonusWrapper,
+    PotentialBasedShapingWrapper,
+    RewardShapingWrapper,
+    HeatmapWrapper,
+)
 
 
 def make_env(env_id: str, strategy: str, seed: int, record_heatmap: bool = False):
@@ -27,14 +33,19 @@ def make_env(env_id: str, strategy: str, seed: int, record_heatmap: bool = False
     env = FlattenObservation(env)
 
     if strategy == "action_bonus":
-        # MiniGrid official exploration bonus wrapper.
-        env = ActionBonus(env)
+        # Same (s,a) counting as MiniGrid ActionBonus, but scaled so dense bonus does not
+        # overwhelm sparse task reward (official wrapper uses ~1.0/step on new pairs).
+        env = ScaledActionBonusWrapper(env, bonus_scale=0.05)
 
     elif strategy == "state_bonus":
         env = StateVisitBonusWrapper(env, bonus_coef=0.05)
 
     elif strategy == "reward_shaping":
         env = RewardShapingWrapper(env, step_penalty=-0.001, success_bonus=0.0)
+
+    elif strategy == "potential_shaping":
+        # Match PPO gamma in train.py for policy-invariant shaping.
+        env = PotentialBasedShapingWrapper(env, gamma=0.99, scale=1.0)
 
     elif strategy in ["baseline", "high_entropy"]:
         pass
