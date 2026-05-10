@@ -1,4 +1,13 @@
 # evaluate.py
+# Evaluation script using RAW environment rewards.
+#
+# During training, action_bonus/state_bonus add intrinsic rewards.
+# If we evaluate with the same bonus wrappers, avg_return and success_rate
+# become inflated and do not represent true task completion.
+#
+# This version loads the trained model but evaluates it in the raw MiniGrid
+# environment with strategy="baseline". Observation/action spaces are unchanged,
+# so the policy remains compatible.
 
 import os
 import argparse
@@ -12,14 +21,17 @@ from config import ENV_CONFIGS, STRATEGIES, EVAL_EPISODES, RESULT_DIR
 from envs import make_env
 
 
-def evaluate_model(env_name: str, strategy: str, seed: int, episodes: int):
+def evaluate_model(env_name: str, trained_strategy: str, seed: int, episodes: int):
     env_id = ENV_CONFIGS[env_name]
 
+    # IMPORTANT:
+    # Always evaluate on the raw environment, not on reward-bonus wrappers.
+    # This makes success_rate and avg_return comparable across strategies.
     env = DummyVecEnv([
-        lambda: make_env(env_id, strategy=strategy, seed=seed + 20_000)
+        lambda: make_env(env_id, strategy="baseline", seed=seed + 20_000)
     ])
 
-    model_file = f"models/{env_name}/{strategy}/seed_{seed}/final_model.zip"
+    model_file = f"models/{env_name}/{trained_strategy}/seed_{seed}/final_model.zip"
     model = PPO.load(model_file)
 
     returns = []
@@ -39,12 +51,13 @@ def evaluate_model(env_name: str, strategy: str, seed: int, episodes: int):
             obs, reward, dones, infos = env.step(action)
 
             done = bool(dones[0])
-            r = float(reward[0])
-            ep_return += r
+            raw_reward = float(reward[0])
+
+            ep_return += raw_reward
             ep_len += 1
 
-            # MiniGrid success usually corresponds to positive terminal reward.
-            if done and r > 0:
+            # In raw MiniGrid evaluation, positive terminal reward means success.
+            if done and raw_reward > 0:
                 success = 1
 
         returns.append(ep_return)
@@ -53,18 +66,17 @@ def evaluate_model(env_name: str, strategy: str, seed: int, episodes: int):
 
     env.close()
 
-    result = {
+    return {
         "env": env_name,
-        "strategy": strategy,
+        "strategy": trained_strategy,
         "seed": seed,
-        "avg_return": np.mean(returns),
-        "std_return": np.std(returns),
-        "success_rate": np.mean(successes),
-        "avg_episode_length": np.mean(lengths),
-        "std_episode_length": np.std(lengths),
+        "avg_return": float(np.mean(returns)),
+        "std_return": float(np.std(returns)),
+        "success_rate": float(np.mean(successes)),
+        "avg_episode_length": float(np.mean(lengths)),
+        "std_episode_length": float(np.std(lengths)),
+        "eval_reward_type": "raw_env_reward",
     }
-
-    return result
 
 
 def main():
@@ -80,7 +92,7 @@ def main():
 
     result = evaluate_model(
         env_name=args.env,
-        strategy=args.strategy,
+        trained_strategy=args.strategy,
         seed=args.seed,
         episodes=args.episodes,
     )
