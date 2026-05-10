@@ -14,11 +14,11 @@
 # "baseline", "action_bonus", "state_bonus", "reward_shaping", "high_entropy"
 
 param(
-    [string[]]$Envs = @("FourRooms"),
-    [string[]]$Strategies = @("baseline", "action_bonus", "state_bonus", "high_entropy"),
+    [string[]]$Envs = @("DoorKey"),
+    [string[]]$Strategies = @("baseline"),
     [int[]]$Seeds = @(42),
-    [int]$Timesteps = 300000,
-    [int]$Episodes = 50,
+    [int]$Timesteps = 512000,
+    [int]$Episodes = 100,
     [ValidateSet("auto", "cuda", "cpu")]
     [string]$Device = "cpu",
     [int]$Verbose = 0,

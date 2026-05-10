@@ -17,7 +17,7 @@ import pandas as pd
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 
-from config import ENV_CONFIGS, STRATEGIES, EVAL_EPISODES, RESULT_DIR
+from config import ENV_CONFIGS, STRATEGIES, EVAL_EPISODES, RESULT_DIR, resolve_trained_model_path
 from envs import make_env
 
 
@@ -31,7 +31,7 @@ def evaluate_model(env_name: str, trained_strategy: str, seed: int, episodes: in
         lambda: make_env(env_id, strategy="baseline", seed=seed + 20_000)
     ])
 
-    model_file = f"models/{env_name}/{trained_strategy}/seed_{seed}/final_model.zip"
+    model_file = resolve_trained_model_path(env_name, trained_strategy, seed)
     model = PPO.load(model_file)
 
     returns = []

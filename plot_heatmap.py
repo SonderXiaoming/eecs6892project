@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from stable_baselines3 import PPO
-from config import ENV_CONFIGS
+from config import ENV_CONFIGS, resolve_trained_model_path
 from envs import make_env
 
 
@@ -37,7 +37,7 @@ def main():
         record_heatmap=True,
     )
 
-    model_file = f"models/{args.env}/{args.strategy}/seed_{args.seed}/final_model.zip"
+    model_file = resolve_trained_model_path(args.env, args.strategy, args.seed)
     model = PPO.load(model_file)
 
     for _ in range(args.episodes):
