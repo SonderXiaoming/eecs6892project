@@ -1052,6 +1052,7 @@ dependencies = [
     { name = "rich" },
     { name = "stable-baselines3" },
     { name = "tensorboard" },
+    { name = "torch" },
     { name = "tqdm" },
 ]
 
@@ -1061,6 +1062,7 @@ requires-dist = [
     { name = "rich", specifier = ">=15.0.0" },
     { name = "stable-baselines3", specifier = ">=2.8.0" },
     { name = "tensorboard", specifier = ">=2.20.0" },
+    { name = "torch", specifier = ">=2.11.0" },
     { name = "tqdm", specifier = ">=4.67.3" },
 ]
 

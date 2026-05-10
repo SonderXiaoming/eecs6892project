@@ -54,12 +54,13 @@ def train_one(
     device = resolve_device(device_arg)
 
     train_env = DummyVecEnv([
-        lambda: make_env(env_id, strategy=strategy, seed=seed)
+        lambda s=seed + i: make_env(env_id, strategy=strategy, seed=s)
+        for i in range(8)
     ])
 
-    eval_env = DummyVecEnv([
-        lambda: make_env(env_id, strategy=strategy, seed=seed + 10_000)
-    ])
+    eval_env = DummyVecEnv(
+        [lambda: make_env(env_id, strategy=strategy, seed=seed + 10_000)]
+    )
 
     model_path = f"{MODEL_DIR}/{env_name}/{strategy}/seed_{seed}"
     log_path = f"{LOG_DIR}/{env_name}/{strategy}/seed_{seed}"
@@ -82,7 +83,7 @@ def train_one(
         env=train_env,
         learning_rate=2.5e-4,
         n_steps=128,
-        batch_size=64,
+        batch_size=256,
         n_epochs=4,
         gamma=0.99,
         gae_lambda=0.95,
@@ -123,7 +124,9 @@ def train_one(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env", type=str, default="DoorKey", choices=list(ENV_CONFIGS.keys()))
+    parser.add_argument(
+        "--env", type=str, default="DoorKey", choices=list(ENV_CONFIGS.keys())
+    )
     parser.add_argument("--strategy", type=str, default="baseline", choices=STRATEGIES)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--timesteps", type=int, default=TOTAL_TIMESTEPS)
