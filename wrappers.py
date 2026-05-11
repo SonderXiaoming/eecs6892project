@@ -260,12 +260,9 @@ class PotentialBasedShapingWrapper(gym.Wrapper):
 
         env_reward = float(info.get("env_reward", reward))
 
-        # If the environment already gives a successful terminal reward,
-        # avoid modifying that final signal with shaping.
-        if terminated and env_reward > 0:
-            shaping = 0.0
-        else:
-            shaping = self.gamma * phi - self._phi_prev
+        # Apply standard potential-based shaping on every transition:
+        # F(s, s') = gamma * Phi(s') - Phi(s)
+        shaping = self.gamma * phi - self._phi_prev
 
         self._phi_prev = phi
 
